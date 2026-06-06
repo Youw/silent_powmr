@@ -169,7 +169,7 @@ small{opacity:.6}
     <div class="card"><div class="k">Grid</div><div class="v" id="grid">--</div></div>
     <div class="card"><div class="k">Batt flow</div><div class="v"><span id="bw">--</span>W</div><small><span id="ba">--</span> A</small></div>
     <div class="card"><div class="k">Temp</div><div class="v"><span id="temp">--</span>&deg;</div></div>
-    <div class="card"><div class="k">Charger/Err</div><div class="v" id="cs">--</div><small>err <span id="err">--</span></small></div>
+    <div class="card"><div class="k">Status</div><div class="v" id="invstate" style="font-size:1.1rem">--</div></div>
   </div>
   <div class="card" style="margin-bottom:12px">
     <div class="k">Charger source priority — reg 5017 (the fan lever)</div>
@@ -236,6 +236,13 @@ function decodeReg(a,le,be){
   return [m[0], (raw*m[1]).toFixed(m[1]<1?1:0)+(m[2]?' '+m[2]:'')];
 }
 function g(id){return document.getElementById(id);}
+function invStatus(d){
+  if((d.error||0)!==0) return 'Fault ('+d.error+')';
+  const w=d.batt_w||0;
+  if(w>10) return 'Charging';
+  if(w<-10) return 'On battery';
+  return d.grid?'On grid':'Standby';
+}
 async function diag(){
   try{
     const s=await(await fetch('/api/diag')).json();
@@ -245,7 +252,7 @@ async function diag(){
     g('lw').textContent=d.load_w; g('lva').textContent=(d.load_va||0);
     g('grid').textContent=d.grid?'present':'lost';
     g('bw').textContent=d.batt_w; g('ba').textContent=(d.batt_a||0).toFixed(1);
-    g('temp').textContent=d.temp; g('cs').textContent=d.charger_status; g('err').textContent=d.error;
+    g('temp').textContent=d.temp; g('invstate').textContent=invStatus(d);
     g('r17be').textContent=s.r5017.be; g('r17hex').textContent=s.r5017.hex;
     const cm={0:'CSO',1:'SNU',2:'OSO',3:'?'}[s.r5017.be]||'?';
     g('cmodeNow').textContent=s.r5017.be+' ('+cm+')';
