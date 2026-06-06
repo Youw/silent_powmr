@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  host-tests:
+    name: Host unit & integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  diag-firmware:
+    name: Build diagnostic firmware (ESP-IDF)
+    runs-on: ubuntu-latest
+    # The prebuilt espressif/idf image has the full ESP-IDF + Xtensa toolchain
+    # baked in, so there is NO ~2 GB install per run — the runner just pulls the
+    # (layer-cached) image and builds. Pinned to match the dev env (v5.5.4); use
+    # `release-v5.5` if a specific patch tag is ever unavailable.
+    container: espressif/idf:v5.5.4
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          idf.py -C diag build
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: silent_powmr_diag-esp32
+          path: |
+            diag/build/silent_powmr_diag.bin
+            diag/build/bootloader/bootloader.bin
+            diag/build/partition_table/partition-table.bin
+          if-no-files-found: error

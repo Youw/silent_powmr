@@ -1,0 +1,38 @@
+# --- Host build outputs (CMake) ---
+/build/
+/build-*/
+/out/
+/cmake-build-*/
+
+# --- ESP-IDF / TuyaOpen firmware build outputs ---
+# diag/ is a standalone ESP-IDF project; firmware/ is a TuyaOpen app (.build/).
+diag/build/
+firmware/build/
+firmware/.build/
+**/build/
+
+# --- ESP-IDF generated config & lock files (NOT the committed defaults) ---
+# Keep: sdkconfig.defaults, partitions.csv, app_default.config.
+# Ignore the per-build sdkconfig (derived from sdkconfig.defaults) and friends.
+sdkconfig
+sdkconfig.old
+**/sdkconfig
+**/sdkconfig.old
+dependencies.lock
+**/dependencies.lock
+**/managed_components/
+
+# --- Device credentials & secrets (Tuya PID/license, Wi-Fi) — never commit ---
+**/secrets.h
+**/credentials.h
+*.secrets
+
+# --- IDE / editor ---
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# --- OS junk ---
+Thumbs.db
+.DS_Store
